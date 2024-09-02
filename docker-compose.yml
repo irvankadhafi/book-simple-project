@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  book-api:
+    build:
+      context: ./book-api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres_db
+      - redis_db
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres_db:5432/bookdb
+      - REDIS_URL=redis://redis_db:6379/0
+    volumes:
+      - book-api-data:/app/data
+
+  book-frontend:
+    build:
+      context: ./book-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - book-api
+    environment:
+      - VUE_APP_API_URL=http://book-api:8000/api/v1
+
+  postgres_db:
+    image: postgres:15
+    ports:
+      - "15432:5432"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=bookdb
+    volumes:
+      - postgres_db:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  redis_db:
+    image: redis:7
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "16379:6379"
+    volumes:
+      - redis_db:/data
+    networks:
+      - backend
+
+volumes:
+  postgres_db:
+  redis_db:
+  book-api-data:
+
+networks:
+  backend:
+    driver: bridge

@@ -1,9 +1,10 @@
+import os
 from fastapi import FastAPI
 from app.delivery.httpsvc.routes import router as http_router
 from fastapi.middleware.cors import CORSMiddleware
 
-
 app = FastAPI()
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -13,9 +14,8 @@ app.add_middleware(
     allow_headers=["*"],  # Or specify the allowed headers like ["Authorization"]
 )
 
-
 app.include_router(http_router, prefix="/api/v1")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("HTTP_PORT", 8000)))

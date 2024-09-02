@@ -63,6 +63,25 @@
       </div>
     </div>
     <p v-else class="text-center text-gray-500">No books found</p>
+
+    <!-- Pagination Controls -->
+    <div class="flex justify-center mt-6 space-x-4">
+      <button
+        :disabled="currentPage === 1"
+        @click="prevPage"
+        class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg disabled:opacity-50"
+      >
+        Previous
+      </button>
+      <span class="text-gray-700">Page {{ currentPage }} of {{ totalPages }}</span>
+      <button
+        :disabled="currentPage === totalPages"
+        @click="nextPage"
+        class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
   </div>
 </template>
 
@@ -76,6 +95,9 @@ export default {
     const searchQuery = ref('');
     const sortOption = ref('');
     const books = ref([]);
+    const currentPage = ref(1);
+    const totalPages = ref(1);
+    const pageSize = ref(10);
     const router = useRouter();
 
     const fetchBooks = async () => {
@@ -89,12 +111,13 @@ export default {
         params.append('sort', sortOption.value);
       }
 
-      params.append('page', 1);
-      params.append('size', 10);
+      params.append('page', currentPage.value);
+      params.append('size', pageSize.value);
 
       try {
         const response = await axios.get(`http://localhost:8000/api/v1/books/?${params.toString()}`);
         books.value = response.data.data.items;
+        totalPages.value = Math.ceil(response.data.data.total / pageSize.value);
       } catch (error) {
         console.error('Error fetching books:', error);
       }
@@ -121,6 +144,20 @@ export default {
       }
     };
 
+    const nextPage = () => {
+      if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+        fetchBooks();
+      }
+    };
+
+    const prevPage = () => {
+      if (currentPage.value > 1) {
+        currentPage.value--;
+        fetchBooks();
+      }
+    };
+
     onMounted(() => {
       fetchBooks();
     });
@@ -129,11 +166,16 @@ export default {
       searchQuery,
       sortOption,
       books,
+      currentPage,
+      totalPages,
+      pageSize,
       fetchBooks,
       goToCreate,
       goToDetail,
       goToUpdate,
       deleteBook,
+      nextPage,
+      prevPage,
     };
   },
 };
