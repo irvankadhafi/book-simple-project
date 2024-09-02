@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+   web:
+     build: .
+     ports:
+       - "8000:8000"
+     depends_on:
+       - postgres_db
+       - redis_db
+     environment:
+       - DATABASE_URL=postgresql://user:password@db:5432/bookdb
+       - REDIS_URL=redis://redis:6379/0
+
+  postgres_db:
+    image: postgres:15
+    ports:
+      - "15432:5432"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=bookdb
+    volumes:
+      - postgres_db:/var/lib/postgresql/data
+    networks:
+      - bridge
+
+  redis_db:
+    image: redis:7
+    networks:
+      - bridge
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "16379:6379"
+    volumes:
+      - "redis_db:/data"
+
+volumes:
+  postgres_db: {}
+  redis_db: {}
+
+networks:
+  bridge:
